@@ -7,6 +7,24 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: light)" href="splash/440x956@3-light.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: dark)" href="splash/440x956@3-dark.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: light)" href="splash/430x932@3-light.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: dark)" href="splash/430x932@3-dark.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: light)" href="splash/428x926@3-light.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: dark)" href="splash/428x926@3-dark.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: light)" href="splash/402x874@3-light.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: dark)" href="splash/402x874@3-dark.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: light)" href="splash/393x852@3-light.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: dark)" href="splash/393x852@3-dark.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: light)" href="splash/390x844@3-light.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: dark)" href="splash/390x844@3-dark.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: light)" href="splash/375x812@3-light.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: dark)" href="splash/375x812@3-dark.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: light)" href="splash/414x896@3-light.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait) and (prefers-color-scheme: dark)" href="splash/414x896@3-dark.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait) and (prefers-color-scheme: light)" href="splash/414x896@2-light.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait) and (prefers-color-scheme: dark)" href="splash/414x896@2-dark.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="نشّف">
@@ -329,7 +347,7 @@ svg.chart text{fill:var(--ink-2);font:500 11px var(--font)}
 .sheet{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.42);display:flex;align-items:flex-end;justify-content:center;animation:fade .2s var(--ease)}
 .sheet[hidden]{display:none}
 .sheet-panel{background:var(--bg);width:100%;max-width:620px;max-height:90%;overflow-y:auto;-webkit-overflow-scrolling:touch;border-radius:22px 22px 0 0;padding:0 16px calc(env(safe-area-inset-bottom) + 20px);animation:rise .32s var(--ease)}
-.sheet-head{position:sticky;top:0;z-index:1;background:var(--bg);display:flex;justify-content:space-between;align-items:center;gap:10px;padding:16px 4px 12px}
+.sheet-head{position:sticky;top:0;z-index:1;background:var(--bg);display:flex;justify-content:space-between;align-items:center;gap:10px;padding:22px 4px 12px}
 .sheet-head h2{font-size:20px}
 .sheet-head .x{width:32px;height:32px;font-size:20px}
 #sheet-body{display:flex;flex-direction:column;gap:12px}
@@ -341,6 +359,64 @@ svg.chart text{fill:var(--ink-2);font:500 11px var(--font)}
 .pill.alt{background:var(--fill);color:var(--ink-2)}
 @keyframes fade{from{opacity:0}to{opacity:1}}
 @keyframes rise{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}
+/* ---------- v5: interactive chart, celebrations, focus mode, gestures ---------- */
+#w-chart svg{touch-action:pan-y;cursor:crosshair;-webkit-user-select:none;user-select:none}
+.w-read{display:flex;flex-direction:column;gap:2px;min-height:54px}
+.w-read b{font-size:30px;font-weight:700;line-height:34px;font-family:var(--font-num)}
+.w-read small{font-size:16px;font-weight:600;color:var(--ink-2)}
+.w-read span{font-size:13px;color:var(--ink-2)}
+#toast.act{pointer-events:auto;display:flex;align-items:center;gap:14px}
+#toast button{all:unset;cursor:pointer;color:var(--accent);font-weight:700}
+#f-list>div{touch-action:pan-y;transition:transform .2s var(--ease),opacity .2s;background:var(--surface)}
+.confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:40}
+.cele{position:fixed;z-index:41;top:calc(env(safe-area-inset-top) + 14px);left:50%;width:min(calc(100% - 28px),520px);transform:translate(-50%,-140%);opacity:0;
+  background:var(--bar-bg);-webkit-backdrop-filter:saturate(180%) blur(24px);backdrop-filter:saturate(180%) blur(24px);border:.5px solid var(--sep);border-radius:22px;
+  padding:16px 18px;box-shadow:0 12px 36px rgba(0,0,0,.18);transition:transform .5s var(--ease),opacity .3s;cursor:pointer}
+.cele[hidden]{display:none}
+.cele.on{transform:translate(-50%,0);opacity:1}
+.cele-t{font-size:24px;font-weight:700;line-height:30px;color:var(--accent)}
+.cele-x{font-size:17px;line-height:25px;margin-top:2px}
+.focus{position:fixed;inset:0;z-index:15;background:var(--bg);display:flex;flex-direction:column;animation:fade .2s var(--ease)}
+.focus[hidden]{display:none}
+.fc-top{display:flex;align-items:center;gap:12px;padding:calc(env(safe-area-inset-top) + 12px) 16px 10px}
+.fc-top .x{width:34px;height:34px;font-size:21px}
+.fc-prog{flex:1;display:flex;flex-direction:column;gap:5px}
+.fc-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 16px 16px;display:flex;flex-direction:column;gap:12px;max-width:620px;width:100%;margin:0 auto}
+.fc-body h2{font-size:24px;line-height:30px}
+.fc-sets{display:flex;flex-direction:column;gap:10px}
+.fc-set{display:grid;grid-template-columns:26px minmax(0,1fr) minmax(0,1fr) 54px;gap:10px;align-items:center}
+.fc-set>span{font-family:var(--font-num);font-weight:600;color:var(--ink-2);text-align:center}
+.fc-set input{all:unset;box-sizing:border-box;width:100%;min-width:0;direction:ltr;background:var(--surface);border-radius:14px;padding:16px 8px;text-align:center;
+  font-family:var(--font-num);font-variant-numeric:tabular-nums;font-size:22px;font-weight:700;color:var(--ink);caret-color:var(--accent)}
+.fc-set input::placeholder{color:var(--ink-3);font-weight:500;font-size:15px;font-family:var(--font)}
+.fc-set input:focus{box-shadow:inset 0 0 0 2px var(--accent)}
+.fc-ok{all:unset;cursor:pointer;width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:var(--fill);color:var(--ink-3);transition:background .25s var(--ease),color .25s,transform .15s}
+.fc-ok:active{transform:scale(.9)}
+.fc-ok svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.fc-set.ok .fc-ok{background:var(--accent);color:var(--on-accent)}
+.fc-ok:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.fc-cues{margin:0;padding-inline-start:20px;display:flex;flex-direction:column;gap:6px;font-size:15px;line-height:21px;color:var(--ink-2)}
+.fc-rest{display:flex;align-items:center;gap:12px;margin:0 16px 10px;padding:10px 14px;background:var(--surface);border-radius:18px;max-width:588px;align-self:center;width:calc(100% - 32px)}
+.fc-rest[hidden]{display:none}
+.fc-rest svg{width:48px;height:48px;transform:rotate(-90deg);flex:none}
+.fc-rest circle{fill:none;stroke-width:5;stroke-linecap:round}
+.fc-rest .track{stroke:var(--fill)}
+.fc-rest .prog{stroke:var(--accent);stroke-dasharray:125.66;transition:stroke-dashoffset .25s linear}
+.fc-rest-t{flex:1;display:flex;flex-direction:column;line-height:1.1}
+.fc-rest-t b{font-size:28px;font-weight:700;font-family:var(--font-num)}
+.fc-rest button{min-height:40px;padding:0 12px}
+.fc-nav{display:flex;gap:10px;padding:8px 16px calc(env(safe-area-inset-bottom) + 14px);max-width:620px;width:100%;margin:0 auto}
+.fc-nav button{flex:1;min-height:50px}
+.fc-nav .ghost{flex:.6}
+.sheet-head{touch-action:none;cursor:grab}
+.sheet-head::before{content:"";position:absolute;top:6px;left:50%;width:36px;height:5px;margin-left:-18px;border-radius:3px;background:var(--ink-3)}
+.sheet-panel{transition:transform .25s var(--ease)}
+/* exercise photos have white studio backgrounds: frame them and soften them in dark mode */
+.shot{border:.5px solid var(--sep)}
+.shot img,.exicon .th{transition:filter .2s}
+:root[data-theme="dark"] .shot img,:root[data-theme="dark"] .exicon .th{filter:brightness(.84) contrast(1.04)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .shot img,:root:not([data-theme="light"]) .exicon .th{filter:brightness(.84) contrast(1.04)}}
+html{background:var(--bg)}
 #p-back{display:none}
 body.restore #v-plan>*:not(.backup){display:none}
 body.restore #p-back{display:block}
@@ -414,6 +490,12 @@ body.restore .backup{order:-1}
       </div>
     </div>
 
+    <h2 class="section">هذا الأسبوع</h2>
+    <div class="card">
+      <div class="tiles" id="t-week"></div>
+      <p class="footnote" id="t-week-note"></p>
+    </div>
+
     <h2 class="section">تمرين اليوم</h2>
     <div class="card">
       <div class="wo-link" id="t-wo"></div>
@@ -448,6 +530,8 @@ body.restore .backup{order:-1}
     </div>
     <h2 class="section">المنحنى</h2>
     <div class="card">
+      <div class="tabs" id="w-range"><button data-r="30">شهر</button><button data-r="90">٣ شهور</button><button data-r="0">الكل</button></div>
+      <div class="w-read" id="w-read" aria-live="off"></div>
       <div id="w-chart"></div>
       <div class="legend"><span><i class="dot"></i>الوزن اليومي</span><span><i></i>متوسط ٧ أيام</span><span><i class="dash"></i>الهدف</span></div>
     </div>
@@ -498,6 +582,7 @@ body.restore .backup{order:-1}
   <!-- TRAIN -->
   <section class="view" id="v-train">
     <div class="row between" style="margin:0 4px"><span class="caption">اختر اليوم</span><span class="pill" id="tr-state"></span></div>
+    <button id="fc-open">ابدأ وضع التركيز</button>
     <div class="tabs scroll" id="tr-tabs"></div>
     <p class="footnote" id="tr-sub" style="margin:0 4px"></p>
     <div id="tr-body" class="stack"></div>
@@ -592,10 +677,26 @@ body.restore .backup{order:-1}
     <div id="sheet-body"></div>
   </div>
 </div>
+<div id="focus" class="focus" role="dialog" aria-modal="true" aria-label="وضع التركيز" hidden>
+  <div class="fc-top">
+    <button class="x" id="fc-close" aria-label="إغلاق وضع التركيز">×</button>
+    <div class="fc-prog"><div class="bar"><i id="fc-bar"></i></div><span class="caption num" id="fc-count"></span></div>
+  </div>
+  <div class="fc-body" id="fc-body"></div>
+  <div class="fc-rest" id="fc-rest" hidden>
+    <svg viewBox="0 0 48 48" aria-hidden="true"><circle class="track" cx="24" cy="24" r="20"/><circle class="prog" id="fc-ring" cx="24" cy="24" r="20"/></svg>
+    <div class="fc-rest-t"><span class="caption">راحة</span><b class="num" id="fc-time" role="timer">٠:٠٠</b></div>
+    <button class="ghost" id="fc-more" aria-label="زد ٣٠ ثانية">زد ٣٠ ث</button><button class="ghost" id="fc-skip">تخطي</button>
+  </div>
+  <div class="fc-nav"><button class="ghost" id="fc-prev">السابق</button><button id="fc-next">التمرين التالي</button></div>
+</div>
+<div id="cele" class="cele" role="status" aria-live="polite" hidden><div class="cele-t"></div><div class="cele-x"></div></div>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script src="store.js"></script>
+<script src="fx.js"></script>
 <script src="app.js"></script>
+<script src="focus.js"></script>
 
 </body>
 </html>

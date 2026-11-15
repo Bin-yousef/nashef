@@ -392,7 +392,11 @@ document.getElementById("p-back").addEventListener("click", () => show("setup"))
 document.addEventListener("click", e => {
   const b=e.target.closest("[data-go]"); if(b){ show(b.dataset.go); render(); }
 });
-function toast(t){const el=document.getElementById("toast"); el.textContent=t; el.classList.add("on"); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove("on"),2200);}
+function toast(t, act){
+  const el=document.getElementById("toast"); el.textContent=t; el.classList.toggle("act", !!act);
+  if(act){ const b=document.createElement("button"); b.textContent=act.label; b.addEventListener("click", () => { el.classList.remove("on"); act.fn(); }); el.appendChild(b); }
+  el.classList.add("on"); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove("on"), act?5500:2200);
+}
 /* accept Arabic-Indic and Persian digits and the Arabic decimal mark, whatever keyboard is active */
 const norm = t => String(t).replace(/[٠-٩]/g, d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[۰-۹]/g, d=>"۰۱۲۳۴۵۶۷۸۹".indexOf(d)).replace(/[٫,،]/g,".").replace(/[^\d.\-]/g,"");
 const num = id => { const v=parseFloat(norm(document.getElementById(id).value)); return isNaN(v)?null:v; };
@@ -487,8 +491,14 @@ document.getElementById("w-save").addEventListener("click", () => {
   const prevK=Object.keys(w.e).filter(k=>k<D).sort().pop(), now=Date.now();
   if(prevK && Math.abs(v-w.e[prevK])>3 && !(wArm.v===v && now-wArm.t<6000)){ wArm={v,t:now}; toast(`فرق كبير عن آخر وزن (${fmt(w.e[prevK])}). اضغط حفظ مرة ثانية للتأكيد`); return; }
   wArm={v:null,t:0};
-  w.e[D]=v; save("weights", w); toast("انحفظ الوزن");
+  w.e[D]=v; save("weights", w); toast("انحفظ الوزن"); checkKilo(w.e);
 });
+/* celebrate each full kilo lost (by the 7-day average, so one light morning does not trigger it) */
+function checkKilo(e){
+  const st=S.settings, a=avgWindow(e, D, 7); if(!st || !a) return;
+  const lost=Math.floor(st.startWeight-a.avg+1e-9), prev=pref.get("kg",0);
+  if(lost>=1 && lost>prev){ pref.set("kg",lost); celebrate(`نزلت ${AR(lost)} كيلو`, pick(KILO_LINES)); }
+}
 document.getElementById("m-save").addEventListener("click", () => {
   rollDay();
   const wa=val("m-waist",50,200,"الخصر"), ne=val("m-neck",25,70,"الرقبة"); if(bad(wa,ne)) return;
@@ -510,7 +520,19 @@ function addFood(n,k,p){
   const f=structuredClone(S.food||{}); f.items=f.items||[];
   if(f.items.length>=60){ toast("وصلت الحد الأعلى لعناصر اليوم"); return; }
   f.items.forEach(x => { if(!x.id) x.id=newId(); }); f.items.push({id:newId(), n, k:Math.round(k), p:Math.round(p*10)/10});
-  S.food=f; save("food-"+D, f); toast("أُضيف: "+n);
+  const before=f.items.slice(0,-1).reduce((a,x)=>a+(x.p||0),0), target=(S.settings&&S.settings.protein)||0;
+  S.food=f; save("food-"+D, f);
+  if(target && before<target && before+p>=target && pref.get("prot","")!==D){ pref.set("prot",D); celebrate("هدف البروتين تم", pick(PROTEIN_LINES)); }
+  else toast("أُضيف: "+n);
+}
+function delFood(i){
+  const f=structuredClone(S.food||{}); f.items=f.items||[]; const [it]=f.items.splice(i,1); if(!it) return;
+  f.items.forEach(x => { if(!x.id) x.id=newId(); }); S.food=f; save("food-"+D, f);
+  const day=D;
+  toast("انحذف: "+it.n, {label:"تراجع", fn:() => {
+    if(day!==D) return;
+    const g=structuredClone(S.food||{}); g.items=g.items||[]; g.items.splice(Math.min(i,g.items.length),0,it); S.food=g; save("food-"+D, g);
+  }});
 }
 /* sample day */
 (() => {
@@ -537,7 +559,7 @@ document.getElementById("c-add").addEventListener("click", () => {
 });
 document.getElementById("f-list").addEventListener("click", e => {
   const b=e.target.closest("[data-delf]"); if(!b) return;
-  const f=structuredClone(S.food); f.items.splice(+b.dataset.delf,1); f.items.forEach(x => { if(!x.id) x.id=newId(); }); S.food=f; save("food-"+D, f);
+  delFood(+b.dataset.delf);
 });
 let mpSel=0;
 function renderMP(){
@@ -609,15 +631,21 @@ document.getElementById("tr-done").addEventListener("click", async () => {
   const chk=captureWO();
   const anySet=Object.values((chk.byDay||{})[chk.day]||{}).some(a=>(a||[]).some(x=>x && x.r));
   if(!anySet && !chk.cardio){ toast("سجّل مجموعة وحدة على الأقل أو دقائق الكارديو"); return; }
+  const wasDone=!!chk.done, prs=[];
   const wo=chk; wo.done=true; woDirty=false; clearTimeout(woTimer); S.wo=wo;
   const lifts=structuredClone(S.lifts||{});
   for(const [ex,sets] of Object.entries(wo.byDay[wo.day]||{})){
     let best=null; (sets||[]).forEach(s=>{ if(s && s.r){ if(!best || (s.w||0)>(best.w||0) || ((s.w||0)===(best.w||0) && s.r>best.r)) best={w:s.w||0,r:s.r}; } });
+    const old=lifts[ex];
+    if(best && old && old.date!==D && (best.w>old.w || (best.w===old.w && best.r>old.r)) && LIB[ex]) prs.push(LIB[ex].n);
     if(best) lifts[ex]={...best, date:D};
   }
   await save("wo-"+D, structuredClone(wo)); await save("lifts", lifts);
   const st=structuredClone(S.settings); st.nextDay=(wo.day+1)%getPlan().days.length; await save("settings", st);
-  trSel=null; toast("عافية! التمرين انحفظ");
+  trSel=null;
+  const prTxt = prs.length ? ` رقم قياسي جديد: ${prs.slice(0,3).join("، ")}.` : "";
+  if(wasDone && !prs.length) toast("تحدّث تمرين اليوم");
+  else celebrate(pick(HYPE_TITLES), (wasDone ? "تحدّث تمرين اليوم." : nextHype()) + prTxt);
 });
 /* photos: img/<id>.jpg shows the two end positions side by side; if it cannot load, fall back to the line diagram */
 const thumb = (id,slot) => `<img class="th" src="img/${id}.jpg" alt="" loading="lazy" decoding="async" data-fb="${ICON_OF[slot]||""}">`;
@@ -899,26 +927,60 @@ function renderBackupReminder(){
 }
 
 /* ---------- chart ---------- */
+let chartRange = pref.get("range", 90), chartGeo = null;
 function chart(entries, goal){
-  const keys=Object.keys(entries).sort(); if(keys.length<1) return `<div class="muted">سجّل وزنك يومياً ويطلع المنحنى هنا.</div>`;
+  let keys=Object.keys(entries).sort(); chartGeo=null;
+  if(keys.length<1) return `<div class="muted">سجّل وزنك يومياً ويطلع المنحنى هنا.</div>`;
+  if(chartRange){ const from=addDays(D,-chartRange), f=keys.filter(k=>k>=from); keys = f.length ? f : keys.slice(-1); }
   const start=keys[0], end=keys[keys.length-1];
   const span=Math.max(1, Math.round((new Date(end)-new Date(start))/864e5));
-  const vals=keys.map(k=>entries[k]); const lo=Math.floor(Math.min(...vals, goal)-1), hi=Math.ceil(Math.max(...vals)+1);
+  const avgs=keys.map(k=>avgWindow(entries,k,7).avg);
+  const vals=keys.map(k=>entries[k]); const lo=Math.floor(Math.min(...vals, ...avgs, goal)-1), hi=Math.ceil(Math.max(...vals, ...avgs)+1);
   const W=340,H=190,L=34,R=8,T=10,B=24;
   const x=k=>L+(W-L-R)*(Math.round((new Date(k)-new Date(start))/864e5)/span), y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo));
+  const pts=keys.map((k,i)=>({k, w:entries[k], avg:avgs[i], x:x(k), y:y(entries[k]), ya:y(avgs[i])}));
+  chartGeo={pts, W};
   let grid=""; const step=Math.max(1,Math.ceil((hi-lo)/5));
   for(let v=lo; v<=hi; v+=step) grid+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--sep)"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${AR(v)}</text>`;
-  const dots=keys.map(k=>`<circle cx="${x(k)}" cy="${y(entries[k])}" r="2.4" fill="var(--ink-3)"/>`).join("");
-  const avg=keys.map(k=>{const a=avgWindow(entries,k,7); return `${x(k)},${y(a.avg)}`;}).join(" ");
-  const lastA=avgWindow(entries,end,7).avg;
+  const dots=pts.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="2.4" fill="var(--ink-3)"/>`).join("");
+  const avg=pts.map(p=>`${p.x},${p.ya}`).join(" "), lastP=pts[pts.length-1];
   const area=`${x(start)},${H-B} ${avg} ${x(end)},${H-B}`;
-  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="منحنى الوزن">${grid}
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="منحنى الوزن. اسحب عليه لقراءة كل يوم">${grid}
     <line x1="${L}" x2="${W-R}" y1="${y(goal)}" y2="${y(goal)}" stroke="var(--ink-3)" stroke-dasharray="4 4"/>
     <polygon points="${area}" fill="var(--accent)" opacity=".08"/>
     ${dots}<polyline points="${avg}" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
-    <circle cx="${x(end)}" cy="${y(lastA)}" r="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="3"/>
+    <circle cx="${lastP.x}" cy="${lastP.ya}" r="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="3"/>
+    <g id="w-cur" visibility="hidden"><line y1="${T}" y2="${H-B}" stroke="var(--ink-2)" stroke-width="1"/><circle class="cd" r="4.5" fill="var(--ink)"/><circle class="ca" r="5.5" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/></g>
     <text x="${L}" y="${H-6}" text-anchor="start">${shortDay(start)}</text><text x="${W-R}" y="${H-6}" text-anchor="end">${shortDay(end)}</text></svg>`;
 }
+/* readout above the chart: the latest day by default, the touched day while scrubbing */
+function chartReadout(p){
+  const el=document.getElementById("w-read");
+  if(!chartGeo){ el.textContent=""; return; }
+  const q=p||chartGeo.pts[chartGeo.pts.length-1];
+  el.innerHTML=`<b class="num">${fmt(q.w)} <small>كجم</small></b><span>${esc(dayLabel(q.k))} · متوسط ٧ أيام ${fmt(q.avg)}</span>`;
+}
+(() => {
+  const box=document.getElementById("w-chart"); let on=false, t=null;
+  function scrub(e){
+    const svg=box.querySelector("svg"); if(!chartGeo || !svg) return;
+    const r=svg.getBoundingClientRect(), vx=(e.clientX-r.left)/r.width*chartGeo.W;
+    let best=chartGeo.pts[0]; for(const p of chartGeo.pts) if(Math.abs(p.x-vx)<Math.abs(best.x-vx)) best=p;
+    const g=svg.querySelector("#w-cur"), ln=g.querySelector("line");
+    ln.setAttribute("x1",best.x); ln.setAttribute("x2",best.x);
+    g.querySelector(".cd").setAttribute("cx",best.x); g.querySelector(".cd").setAttribute("cy",best.y);
+    g.querySelector(".ca").setAttribute("cx",best.x); g.querySelector(".ca").setAttribute("cy",best.ya);
+    g.setAttribute("visibility","visible"); chartReadout(best);
+  }
+  function release(){ on=false; clearTimeout(t); t=setTimeout(() => { const g=box.querySelector("#w-cur"); if(g) g.setAttribute("visibility","hidden"); chartReadout(); }, 1400); }
+  box.addEventListener("pointerdown", e => { on=true; clearTimeout(t); scrub(e); });
+  box.addEventListener("pointermove", e => { if(on || e.pointerType==="mouse"){ clearTimeout(t); scrub(e); } });
+  box.addEventListener("pointerup", release); box.addEventListener("pointercancel", release); box.addEventListener("pointerleave", release);
+  document.getElementById("w-range").addEventListener("click", e => {
+    const b=e.target.closest("[data-r]"); if(!b) return;
+    chartRange=+b.dataset.r; pref.set("range",chartRange); render();
+  });
+})();
 
 /* ---------- render ---------- */
 const RING_C = 2*Math.PI*42;
@@ -933,7 +995,7 @@ function render(){
   const a7=lastKey?avgWindow(we,lastKey,7):null, prev=lastKey?avgWindow(we,addDays(lastKey,-7),7):null;
   const cur = a7 ? a7.avg : st.startWeight;
   // weight card
-  document.getElementById("t-avg").textContent = fmt(cur);
+  countTo(document.getElementById("t-avg"), Math.round(cur*10)/10, v=>fmt(v));
   document.getElementById("t-left").textContent = fmt(Math.max(0,cur-st.goalWeight))+" كجم";
   const prog = (st.startWeight-cur)/(st.startWeight-st.goalWeight)*100;
   document.getElementById("t-prog").style.width = Math.max(0,Math.min(100,prog))+"%";
@@ -968,16 +1030,26 @@ function render(){
   document.getElementById("t-kcal").textContent = `${AR(kc)} / ${AR(st.kcal)}`;
   document.getElementById("t-prot").textContent = `${fmt(pr,0)} / ${AR(st.protein)} جم`;
   ring("t-kring", kc/st.kcal, kc>st.kcal); ring("t-pring", pr/st.protein, false);
-  document.getElementById("t-kleft").textContent = AR(Math.abs(st.kcal-kc));
+  countTo(document.getElementById("t-kleft"), Math.abs(st.kcal-kc), v=>AR(Math.round(v)));
   document.getElementById("t-kleft").nextElementSibling.textContent = kc>st.kcal ? "سعرة زيادة" : "سعرة باقية";
-  document.getElementById("t-pleft").textContent = fmt(Math.max(0,st.protein-pr),0);
+  countTo(document.getElementById("t-pleft"), Math.round(Math.max(0,st.protein-pr)), v=>fmt(v,0));
   document.getElementById("f-kcal").textContent = `${AR(kc)} / ${AR(st.kcal)}`;
   document.getElementById("f-prot").textContent = `${fmt(pr,0)} / ${AR(st.protein)} جم`;
   setBar("f-kbar", kc/st.kcal*100, kc>st.kcal); setBar("f-pbar", pr/st.protein*100);
   const left=st.kcal-kc, pleft=st.protein-pr;
   document.getElementById("f-left").textContent = left>=0 ? `باقي ${AR(left)} سعرة و${fmt(Math.max(0,pleft),0)} جم بروتين` : `زدت ${AR(-left)} سعرة`;
-  document.getElementById("f-list").innerHTML = items.length ? items.map((x,i)=>`<div><span>${esc(x.n)}</span><span class="row" style="gap:4px;flex-wrap:nowrap"><span class="num muted">${AR(x.k)} سعرة · ${fmt(x.p,0)} جم</span><button class="x" aria-label="حذف" data-delf="${i}">×</button></span></div>`).join("") : `<div class="muted">ما سجلت شي اليوم.</div>`;
+  document.getElementById("f-list").innerHTML = items.length ? items.map((x,i)=>`<div data-row="${i}"><span>${esc(x.n)}</span><span class="row" style="gap:4px;flex-wrap:nowrap"><span class="num muted">${AR(x.k)} سعرة · ${fmt(x.p,0)} جم</span><button class="x" aria-label="حذف" data-delf="${i}">×</button></span></div>`).join("") : `<div class="muted">ما سجلت شي اليوم.</div>`;
   document.getElementById("f-week").textContent = week ? `متوسط آخر ${AR(week.n)} ${week.n>2&&week.n<11?"أيام مسجلة":"يوم مسجل"} قبل اليوم: ${AR(Math.round(week.k))} سعرة و${AR(Math.round(week.p))} جم بروتين.` : "";
+  // this week
+  let woDone=0; for(let i=0;i<7;i++){ const w = i===0 ? S.wo : Store.get("wo-"+addDays(D,-i)); if(w && w.done) woDone++; }
+  const mks=Object.keys(me).sort(), wDiff = mks.length>1 ? me[mks[mks.length-1]].waist-me[mks[mks.length-2]].waist : null;
+  document.getElementById("t-week").innerHTML = [
+    ["التمارين", `${AR(woDone)} من ${AR(S.program.days)}`],
+    ["تغيّر الوزن", rate==null ? "—" : `${rate>0?"+":"−"}${fmt(Math.abs(rate),1)} كجم`],
+    ["متوسط السعرات", week ? AR(Math.round(week.k)) : "—"],
+    ["متوسط البروتين", week ? `${AR(Math.round(week.p))} جم` : "—"]
+  ].map(([k,v])=>`<div class="stat"><span class="caption">${esc(k)}</span><span class="mid">${esc(v)}</span></div>`).join("");
+  document.getElementById("t-week-note").textContent = "آخر ٧ أيام." + (wDiff!=null ? ` الخصر ${wDiff>0?"زاد":wDiff<0?"نزل":"ثابت"}${wDiff? " "+fmt(Math.abs(wDiff),1)+" سم":""} عن القياس اللي قبله.` : "");
   const stp=S.wo && S.wo.steps;
   document.getElementById("t-steps").textContent = stp ? `${AR(stp)} / ${AR(st.steps||8000)}` : `الهدف ${AR(st.steps||8000)}`;
   renderBackupReminder();
@@ -988,7 +1060,8 @@ function render(){
   const wd=document.getElementById("t-wodone"); const done=S.wo&&S.wo.done; wd.textContent=done?"تم":"لم يكتمل"; wd.className="pill"+(done?"":" warn");
   // weight tab
   const wi=document.getElementById("w-in"); if(document.activeElement!==wi) wi.value = we[D] ?? (lastKey? we[lastKey] : "");
-  document.getElementById("w-chart").innerHTML = chart(we, st.goalWeight);
+  document.getElementById("w-chart").innerHTML = chart(we, st.goalWeight); chartReadout();
+  document.querySelectorAll("#w-range [data-r]").forEach(b => { const on=+b.dataset.r===chartRange; b.classList.toggle("on",on); b.setAttribute("aria-pressed",String(on)); });
   document.getElementById("w-list").innerHTML = keys.length ? keys.slice(-21).reverse().map(k=>`<div><span>${dayLabel(k)}</span><span class="row" style="gap:4px;flex-wrap:nowrap"><span class="num">${fmt(we[k])} كجم</span><button class="x" aria-label="حذف" data-delw="${k}">×</button></span></div>`).join("") : `<div class="muted">لا يوجد</div>`;
   document.getElementById("m-list").innerHTML = mk.slice(-8).reverse().map(k=>{const b=navyBF(me[k].waist,me[k].neck,st.height);
     return `<div><span>${dayLabel(k)}</span><span class="row" style="gap:4px;flex-wrap:nowrap"><span class="num muted">خصر ${AR(me[k].waist)} · رقبة ${AR(me[k].neck)} · ${b!=null?fmt(b)+"٪":"—"}</span><button class="x" aria-label="حذف" data-delm="${k}">×</button></span></div>`;}).join("");
