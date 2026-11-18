@@ -417,6 +417,27 @@ svg.chart text{fill:var(--ink-2);font:500 11px var(--font)}
 :root[data-theme="dark"] .shot img,:root[data-theme="dark"] .exicon .th{filter:brightness(.84) contrast(1.04)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .shot img,:root:not([data-theme="light"]) .exicon .th{filter:brightness(.84) contrast(1.04)}}
 html{background:var(--bg)}
+/* ---------- v6: challenges + cardio coach ---------- */
+.ch{gap:10px;background:linear-gradient(0deg,var(--surface),var(--surface)) padding-box}
+.ch-text{font-size:21px;line-height:30px;font-weight:700}
+.ch-text.done{color:var(--ink-2);text-decoration:line-through;text-decoration-thickness:2px;text-decoration-color:var(--accent)}
+.ch-ok{color:var(--accent)}
+.ch-more summary,.cx-alts summary{cursor:pointer;font-size:14px;font-weight:600;color:var(--ink-2)}
+.ch-more input[type=time]{all:unset;direction:ltr;font-family:var(--font-num);font-size:17px;color:var(--ink);padding:12px 0}
+.cx-ask{font-size:15px;font-weight:600;color:var(--accent)}
+.cx-s{background:var(--fill-2);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.cx-s h3{font-size:16px;line-height:22px}
+.cx-s .muted{font-size:14px;line-height:20px}
+.cx-s.off{opacity:.55}
+.cx-alts{display:flex;flex-direction:column;gap:8px}
+.cx-rate{display:flex;gap:8px}.cx-rate button{flex:1}
+.cx-rest{align-self:flex-start}
+.cx-meter{display:flex;flex-direction:column;gap:6px;border-top:.5px solid var(--sep);padding-top:10px}
+.cxt-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:0 24px}
+.cxt-phase{font-size:30px;font-weight:700;line-height:38px;color:var(--ink-2);transition:color .3s}
+.cxt-time{font-size:88px;font-weight:700;line-height:1;letter-spacing:-2px;font-family:var(--font-num)}
+.cxt[data-ph="r"] .cxt-phase,.cxt[data-ph="h"] .cxt-phase{color:var(--accent)}
+.cxt[data-ph="r"] .cxt-time,.cxt[data-ph="h"] .cxt-time{color:var(--accent)}
 #p-back{display:none}
 body.restore #v-plan>*:not(.backup){display:none}
 body.restore #p-back{display:block}
@@ -470,6 +491,7 @@ body.restore .backup{order:-1}
       <p class="footnote" id="t-progtxt"></p>
     </div>
 
+    <div class="card ch" id="ch-card"></div>
     <div class="note warn" id="t-backup" hidden><span id="t-backup-txt"></span><div style="margin-top:10px"><button class="ghost" data-go="plan" style="min-height:38px">روح للنسخ الاحتياطي</button></div></div>
 
     <h2 class="section">أكل اليوم</h2>
@@ -499,6 +521,7 @@ body.restore .backup{order:-1}
     <h2 class="section">تمرين اليوم</h2>
     <div class="card">
       <div class="wo-link" id="t-wo"></div>
+      <p class="footnote" id="t-cx"></p>
       <div class="row between">
         <span class="pill" id="t-wodone">لم يبدأ</span>
         <button class="ghost" data-go="train">افتح التمرين</button>
@@ -586,7 +609,8 @@ body.restore .backup{order:-1}
     <div class="tabs scroll" id="tr-tabs"></div>
     <p class="footnote" id="tr-sub" style="margin:0 4px"></p>
     <div id="tr-body" class="stack"></div>
-    <h2 class="section">الكارديو بعد الحديد</h2>
+    <h2 class="section">الكارديو</h2>
+    <div class="card" id="cx-card"></div>
     <div class="form">
       <label class="field" for="tr-cardio"><span>الدقائق</span><input id="tr-cardio" type="text" autocomplete="off" inputmode="numeric" placeholder="٤٥"><em>د</em></label>
       <label class="field" for="tr-steps"><span>خطوات اليوم</span><input id="tr-steps" type="text" autocomplete="off" inputmode="numeric" placeholder="٨٠٠٠"><em>خطوة</em></label>
@@ -690,12 +714,27 @@ body.restore .backup{order:-1}
   </div>
   <div class="fc-nav"><button class="ghost" id="fc-prev">السابق</button><button id="fc-next">التمرين التالي</button></div>
 </div>
+<div id="cxt" class="focus cxt" role="dialog" aria-modal="true" aria-label="مؤقت الكارديو" hidden>
+  <div class="fc-top">
+    <button class="x" id="cxt-close" aria-label="إغلاق المؤقت">×</button>
+    <div class="fc-prog"><div class="bar"><i id="cxt-bar"></i></div><span class="caption num" id="cxt-left"></span></div>
+  </div>
+  <div class="cxt-body">
+    <p class="caption" id="cxt-title"></p>
+    <div class="cxt-phase" id="cxt-phase"></div>
+    <div class="cxt-time num" id="cxt-time" role="timer"></div>
+    <p class="muted" id="cxt-next"></p>
+    <p class="footnote">المؤقت يمشي بالساعة، فلو قفلت الشاشة يبقى صحيح. التنبيه الصوتي يشتغل والتطبيق مفتوح بس.</p>
+  </div>
+  <div class="fc-nav"><button class="ghost" id="cxt-pause">إيقاف مؤقت</button><button id="cxt-done">خلصت الجلسة</button></div>
+</div>
 <div id="cele" class="cele" role="status" aria-live="polite" hidden><div class="cele-t"></div><div class="cele-x"></div></div>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script src="store.js"></script>
 <script src="fx.js"></script>
 <script src="app.js"></script>
+<script src="play.js"></script>
 <script src="focus.js"></script>
 
 </body>

@@ -169,17 +169,17 @@ const TEMPLATES = {
 const WEEK = {5:"تمرين، تمرين، راحة، تمرين، تمرين، تمرين، راحة", 4:"تمرين، تمرين، راحة، تمرين، تمرين، راحة، راحة", 3:"تمرين، راحة، تمرين، راحة، تمرين، راحة، راحة"};
 const EQ_OPTS  = [["bb","بار ورف"],["db","دمبل"],["cable","كيبل"],["machine","أجهزة"],["smith","سميث"],["pull","عقلة ومتوازي"],["acc","مطاط وكورة وعجلة"]];
 const LIM_OPTS = [["shoulder","الكتف"],["back","أسفل الظهر"],["knee","الركبة"],["elbow","الكوع أو الرسغ"]];
-const CARDIO_OPTS = [["walk","مشي أو سير بميلان"],["bike","دراجة"],["ellip","إليبتكال"],["rowerg","جهاز تجديف"],["swim","سباحة"],["stairs","جهاز درج"]];
+const CARDIO_OPTS = [["walk","مشي أو سير بميلان"],["run","هرولة"],["bike","دراجة"],["ellip","إليبتكال"],["rowerg","جهاز تجديف"],["swim","سباحة"],["stairs","جهاز درج"]];
 const LEVELS = [["beg","مبتدئ"],["mid","متوسط"],["adv","متقدم"]];
 const PACES  = [["easy","هادئ"],["mid","معتدل"],["fast","أسرع"]];
-const DEFAULT_PROG = {days:5, level:"mid", pace:"mid", eq:EQ_OPTS.map(x=>x[0]), lim:[], cardio:["walk"], swaps:{}};
+const DEFAULT_PROG = {days:5, level:"mid", pace:"mid", eq:EQ_OPTS.map(x=>x[0]), lim:[], cardio:["walk","run","bike"], swaps:{}};
 /* whatever is stored, hand back a complete, valid programme */
 function normProg(p){
   p = (p && typeof p==="object") ? p : {};
   const pickArr=(a,opts,def)=>Array.isArray(a) ? a.filter(x=>opts.some(o=>o[0]===x)) : def.slice();
   const sw={}; if(p.swaps && typeof p.swaps==="object") for(const [k,v] of Object.entries(p.swaps)) if(SLOTS[k] && SLOTS[k].o.includes(v) && v!==SLOTS[k].o[0]) sw[k]=v;
   return {days:[3,4,5].includes(p.days)?p.days:5, level:LEVELS.some(l=>l[0]===p.level)?p.level:"mid", pace:PACES.some(l=>l[0]===p.pace)?p.pace:"mid",
-    eq:pickArr(p.eq,EQ_OPTS,DEFAULT_PROG.eq), lim:pickArr(p.lim,LIM_OPTS,[]), cardio:pickArr(p.cardio,CARDIO_OPTS,["walk"]), swaps:sw};
+    eq:pickArr(p.eq,EQ_OPTS,DEFAULT_PROG.eq), lim:pickArr(p.lim,LIM_OPTS,[]), cardio:pickArr(p.cardio,CARDIO_OPTS,DEFAULT_PROG.cardio), swaps:sw};
 }
 const hasGear = (id,prog) => { const n=LIB[id].need; return !n || n.split("+").every(t=>prog.eq.includes(t)); };
 const hurts   = (id,prog) => (LIB[id].st||"").split(" ").filter(t=>t && prog.lim.includes(t));
@@ -385,6 +385,7 @@ function route(){
   if(mode!=="ready") return;
   if(!S.settings){ if(current!=="plan") show("setup"); }
   else if(current==="setup" || document.body.classList.contains("restore")) show("today");
+  else if(!document.querySelector(".view[id^=v-].on")) show(current);   /* reopening with saved data: show the current screen */
   else document.getElementById("nav").style.display="flex";
 }
 document.getElementById("s-restore").addEventListener("click", () => show("plan"));
@@ -474,7 +475,7 @@ document.getElementById("s-go").addEventListener("click", async () => {
   const waist=val("s-waist",50,200,"الخصر",false), neck=val("s-neck",25,70,"الرقبة",false); if(bad(waist,neck)) return;
   if(waist!=null && neck!=null && waist<=neck){ toast("الخصر لازم يكون أكبر من الرقبة"); return; }
   const kcal=val("s-k",1500,4000,"السعرات"), protein=val("s-p",60,300,"البروتين"); if(bad(kcal,protein)) return;
-  const st = {height, age, startWeight:sw, goalWeight:goal, kcal, protein, steps:8000, startDate:D, nextDay:0};
+  const st = {height, age, startWeight:sw, goalWeight:goal, kcal, protein, steps:8000, startDate:D, nextDay:0, cxInit:1, cx:{lvl:1, ok:0, hard:0}};
   const w = structuredClone(S.weights); w.e = w.e||{}; w.e[D]=st.startWeight;
   const m = structuredClone(S.measures); m.e = m.e||{};
   if(waist!=null && neck!=null) m.e[D]={waist, neck};
@@ -690,6 +691,7 @@ function renderTrain(force){
   const ca=document.getElementById("tr-cardio"), stp=document.getElementById("tr-steps");
   if(document.activeElement!==ca) ca.value = (S.wo && S.wo.cardio) ?? "";
   if(document.activeElement!==stp) stp.value = (S.wo && S.wo.steps) ?? "";
+  if(typeof renderCardio==="function") renderCardio();
 }
 
 /* ---------- alternatives sheet ---------- */
@@ -1053,6 +1055,7 @@ function render(){
   const stp=S.wo && S.wo.steps;
   document.getElementById("t-steps").textContent = stp ? `${AR(stp)} / ${AR(st.steps||8000)}` : `الهدف ${AR(st.steps||8000)}`;
   renderBackupReminder();
+  if(typeof renderPlay==="function") renderPlay();
   // today workout summary
   const d = (S.wo && S.wo.day!=null) ? S.wo.day : (st.nextDay||0);
   const pdays=getPlan().days, p=pdays[((d%pdays.length)+pdays.length)%pdays.length];
@@ -1126,6 +1129,8 @@ if("serviceWorker" in navigator && location.protocol==="https:" || location.host
 (async () => {
   Store.onStatus(renderStore);
   await Store.open();
+  /* the database can open before the later script files (play.js, focus.js) finish loading: wait for all of them */
+  if(document.readyState==="loading") await new Promise(r => document.addEventListener("DOMContentLoaded", r, {once:true}));
   mode="ready";
   subscribeAll(); loadWeek(); route(); renderStore(Store.status());
   try{ if(navigator.storage && navigator.storage.persist && !(await navigator.storage.persisted())) await navigator.storage.persist(); }catch(e){}
